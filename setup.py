@@ -17,7 +17,7 @@ setuptools.setup(
     description="opengpt is a open implementation of GPT agents by openai.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/driscollis/arithmetic",
+    url="https://github.com/PrAsAnNaRePo/LocalAgent",
     packages=setuptools.find_packages(),
     install_requires=install_requires,
     classifiers=[
