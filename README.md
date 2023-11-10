@@ -4,11 +4,7 @@
 localagent empowers you to craft Large Language Model (LLM) Agents tailored to your needs, utilizing your own functions and tools alongside **local open LLMs**. Unleash your creative ideas to effortlessly develop diverse agents with localagent. It seamlessly integrates with any openly available LLM and accommodates a wide range of tools, providing flexibility and ease of use.
 
 ### Demo:
-
-<video width="320" height="240" controls>
-  <source src="assets/local_agent_demo.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+https://github.com/PrAsAnNaRePo/LocalAgent/assets/98259409/229b47df-226f-453c-81a6-5d7b69fbee06
 
 ## Table of Contents
 
