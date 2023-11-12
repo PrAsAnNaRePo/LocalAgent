@@ -177,6 +177,73 @@ agent = CreateAgent(
 agent.go_flow('when did openai was founded?')
 ```
 
+Let's create full-fledged AI assistant.
+```python
+import os
+from metaphor_python import Metaphor
+from localagent import CreateAgent
+
+metaphor = Metaphor(os.environ.get("METAPHOR_API_KEY"))
+
+def search(search_query: str) -> dict:
+    response = metaphor.search(
+                search_query,
+                num_results=1,
+                use_autoprompt=True
+            )
+    return f"{response.autoprompt_string}\n{str(response.get_contents())}"
+
+def update_memory(data:str):
+    with open("memory.txt", "a") as f:
+        f.write(data+'\n')
+    return f"Updated memory with {data}."
+
+tools = [
+    {
+        'name_for_human':
+        'google search',
+        'name_for_model':
+        'google_search',
+        'description_for_model':
+        'google Search is a general search engine that can be used to access the Internet, query encyclopedia knowledge, understand current affairs news, etc. Use this API only you are not familliar with the topic or any current trends',
+        'parameters': [{
+            'name': 'search_query',
+            'description': 'Search for a keyword or phrase',
+            'required': True,
+            'schema': {
+                'type': 'string'
+            },
+        }],
+        "function": search
+    },
+    {
+        'name_for_human':
+        'Memory',
+        'name_for_model':
+        'update_memory',
+        'description_for_model':
+        'update_memory is a tool that helps to store important info in local permanent memory.',
+        'parameters': [{
+            'name': 'data',
+            'description': 'Enter data to store such as user name, remainders etc.',
+            'required': True,
+            'schema': {
+                'type': 'string'
+            },
+        }],
+        "function": update_memory
+    },
+]
+
+agent = CreateAgent(
+    system_prompt="You are a personal assistant who has wide knowledge in world topics.",
+    webui_url='ws://127.0.0.1:5005/api/v1/stream',
+    tools=tools,
+    use_codeinterpreter=True,
+)
+
+agent.go_flow('Check out my IP address.')
+```
 ## 🐦 Connect with Us on Twitter 
 
 Stay up-to-date with the latest news, updates, and insights about Local Agent by following our Twitter accounts. Engage with the developer and the AI's own account for interesting discussions, project updates, and more.
