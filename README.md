@@ -45,6 +45,7 @@ pip install localagent
 ```
 ## 🔧 Usage
 
+### Using Agents with textgeneration webui.
 1. Create any kinda agent using `CreateAgent` class from `localagent.initialize_agents`
 
 ## Setup webui api
@@ -80,6 +81,21 @@ agent = CreateAgent(
 )
 ```
 - To run the agent with streaming capablity pass the streaming uri (ends with stream in the url) or To run with non-streaming just pass the url starts with http (for example: `http://127.0.0.1:5050/api`)
+
+### Using Agents with ollama.
+1. Install [ollama](https://ollama.ai/)
+2. download any models from cli using ollama. You can download any model you want.
+```
+ollama run dolphin2.2-mistral
+```
+3. That's all you need to setup for agents with ollama. Lets create a agent with it.
+```python
+from localagent.initialize_agents import CreateAgent
+
+agent = CreateAgent(
+    ollama_model_name='dolphin2.2-mistral'
+)
+```
 
 ## Native Code Interpreter
 
