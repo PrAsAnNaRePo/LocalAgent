@@ -1,0 +1,14 @@
+LICENSE
+README.md
+setup.py
+localagent/__init__.py
+localagent/gen.py
+localagent/initialize_agents.py
+localagent/interpreter.py
+localagent/knowledge_base.py
+localagent/utils.py
+localagent.egg-info/PKG-INFO
+localagent.egg-info/SOURCES.txt
+localagent.egg-info/dependency_links.txt
+localagent.egg-info/requires.txt
+localagent.egg-info/top_level.txt

@@ -9,12 +9,12 @@ init(autoreset=True)
 def get_prompt_from_template(system, history, human_, assistant_, eos_token):
         for i in history:
             if i['role'] == 'user':
-                system += f'{human_}: {i["content"]}{eos_token}'
+                system += f'{human_}{i["content"]}{eos_token}'
             if i['role'] == 'assistant':
-                system += f'{assistant_}:{i["content"]}{eos_token}'
+                system += f'{assistant_}{i["content"]}{eos_token}'
 
         if history[-1]['role'] == 'user':
-            system += f'{assistant_}:'
+            system += f'{assistant_}'
 
         return system
 

@@ -2,7 +2,7 @@ import json
 from localagent.knowledge_base import KnowledgeBase
 from localagent.utils import get_prompt_from_template, assistant_message, internal_monologue, important_message, clear_line, warning_message
 from localagent.interpreter import Interpreter
-from localagent.gen import stream_run, run
+from localagent.gen import stream_run, run, ollama_generate
 from rich.console import Console
 
 console = Console()
@@ -14,8 +14,10 @@ warnings.filterwarnings("ignore")
 class CreateAgent:
     def __init__(
             self,
-            webui_url: str,
+            webui_url: str=None,
+            ollama_model_name:str = None,
             system_prompt: str = None,
+            system_:str = '',
             human_:str = 'GPT4 User',
             assistant_:str = "GPT4 Assistant",
             eos_token:str = '<|end_of_turn|>',
@@ -23,21 +25,28 @@ class CreateAgent:
             use_codeinterpreter: bool = False,
             interpreter_max_try:int = 3,
             knowledge_base: KnowledgeBase = None,
+            stream:bool = False,
             verbose:bool = False,
     ) -> None:
-        if webui_url.startswith('http'):
-            self.stream = False
-            self.webui_url = webui_url+'/v1/generate'
-            if verbose:
-                important_message('agent initialized with non stream, If you want to start agent with streaming pass the streaming uri instead.')
-        elif webui_url.startswith('ws'):
-            self.stream = True
-            self.webui_url = webui_url
-            if verbose:
-                important_message('agent initialized with stream, If you want to start agent with non streaming pass the regular api uri instead.')
+        assert webui_url is not None or ollama_model_name is not None, 'Either webui_url or ollama_model_name should be given.'
+        self.webui_url = webui_url
+        self.olla_model_name = ollama_model_name
+        self.stream = stream
+        if webui_url is not None:       
+            if webui_url.startswith('http'):
+                self.stream = False
+                self.webui_url = webui_url+'/v1/generate'
+                if verbose:
+                    important_message('agent initialized with non stream, If you want to start agent with streaming pass the streaming uri instead.')
+            elif webui_url.startswith('ws'):
+                self.stream = True
+                self.webui_url = webui_url
+                if verbose:
+                    important_message('agent initialized with stream, If you want to start agent with non streaming pass the regular api uri instead.')
         
         self.system_prompt = system_prompt
         self.tools = tools
+        self.system_ = system_
         self.human_ = human_
         self.assistant_ = assistant_
         self.eos_token = eos_token
@@ -50,7 +59,7 @@ class CreateAgent:
         if not system_prompt:
             if verbose:
                 important_message('No system prompt given, creating default system prompt.')
-            self.system_prompt = 'You are an AI assistant\n'
+            self.system_prompt = f'{self.system_}\nYou are an AI assistant\n'
         
         if not self.tools:
             self.tools = []
@@ -129,7 +138,7 @@ class CreateAgent:
         tool_descs = '\n\n'.join(tool_descs)
         tool_names = ','.join(tool_names)
         if self.use_codeinterpreter:
-            react_prompt = f"""
+            react_prompt = f"""{self.system_}
 YOUR PERSONA:
 {self.system_prompt}
 
@@ -158,7 +167,7 @@ Thought: Now the files are created. I should tell the user about it. No need to 
 Message: Created a folder and file in it. I'm here to help you if you need any assistance.{self.eos_token}
 """
         else:
-            react_prompt = f"""
+            react_prompt = f"""{self.system_}
 YOUR PERSONA:
 {self.system_prompt}
 
@@ -188,17 +197,17 @@ Message: Hey there! I'm just here. How can I help you today?{self.eos_token}"""
             
             if len(self.tools) != 0:
                 if self.stream:
-                    raw_response = stream_run(self.webui_url, prompt, force_model=True)
+                    raw_response = stream_run(self.webui_url, prompt, force_model=True) if self.webui_url else ollama_generate(self.olla_model_name, template=prompt, force_model=True, stream=True)[0].replace(self.eos_token, "").replace(self.eos_token[:-1], "")
                 else:
                     with console.status("[bold cyan]Thinking...") as status:
-                        raw_response = run(self.webui_url, prompt, force_model=True)
+                        raw_response = run(self.webui_url, prompt, force_model=True) if self.webui_url else ollama_generate(self.olla_model_name, template=prompt)[0].replace(self.eos_token, "").replace(self.eos_token[:-1], "")
             else:
                 if self.stream:
-                    raw_response = stream_run(self.webui_url, prompt)
+                    raw_response = stream_run(self.webui_url, prompt) if self.webui_url else ollama_generate(self.olla_model_name, template=prompt, stream=True)[0].replace(self.eos_token, "").replace(self.eos_token[:-1], "")
                 else:
                     with console.status("[bold cyan]Thinking...") as status:
-                        raw_response = str(run(self.webui_url, prompt))
-                        
+                        raw_response = str(run(self.webui_url, prompt)) if self.webui_url else ollama_generate(model_name=self.olla_model_name, template=prompt)[0].replace(self.eos_token, "").replace(self.eos_token[:-1], "")
+
             self.history.append({"role": "assistant", "content": raw_response})
 
             if len(self.tools) != 0:
