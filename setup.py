@@ -11,7 +11,7 @@ install_requires = [
 
 setuptools.setup(
     name="localagent",
-    version="0.0.2",
+    version="0.0.3",
     author="nnpy",
     author_email="prasannatwenty@gmail.com",
     description="opengpt is a open implementation of GPT agents by openai.",

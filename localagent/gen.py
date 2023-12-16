@@ -114,13 +114,15 @@ def ollama_generate(model_name, prompt=None, system=None, template=None, stream=
                         if not chunk.get("done"):
                             response_piece = chunk.get("response", "")
                             full_response += response_piece
+                            if 'Observation' in full_response:
+                                break
                             if stream:
                                 print(response_piece, end="", flush=True)
                     
                     # Check if it's the last chunk (done is true)
                     if chunk.get("done"):
                         final_context = chunk.get("context")
-            
+            full_response = full_response.replace('Observation', '')
             # Return the full response and the final context
             return '\nThought:'+full_response if force_model else full_response, final_context
         

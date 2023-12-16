@@ -106,7 +106,7 @@ from localagent.initialize_agents import CreateAgent
 
 agent = CreateAgent(
     webui_url='ws://127.0.0.1:5005/api/v1/stream',
-    use_codeinterpreter=True # That's it
+    use_codeinterpreter=True, # That's it
     verbose=True
 )
 agent.go_flow('Checkout my ip address in the system.')
@@ -139,6 +139,7 @@ export HUGGINGFACEHUB_API_TOKEN=hf_xxxxxxxx
 ```
 
 ## Using different llms
+### working with webui:
 - To use different llms, make sure you have downloaded the model in textgen webui.
 - Use the command for the model you want to use: 
 `python3 server.py --api --api-blocking-port 5050 --model <Model name here> --n-gpu-layers 20 --n_batch 512`
@@ -156,6 +157,23 @@ agent = CreateAgent(
     verbose=True
 )
 ```
+### working with ollama:
+- This example shows how to use [OpenHermes 2.5](https://huggingface.co/teknium/OpenHermes-2.5-Mistral-7B) with ollama!
+- Make sure to pull the model before executing the code.
+```python
+from localagent.initialize_agents import CreateAgent
+
+agent = CreateAgent(
+    ollama_model_name='openhermes2.5-mistral',
+    use_codeinterpreter=True,
+    verbose=True,
+    stream=True,
+    system_="<|im_start|>system\n",
+    human_='<|im_start|>user\n',
+    assistant_='<|im_start|>assistant\n')
+
+```
+- Feel free to adjust the `system_`, `human_`, `assistant_` parameters depends upon the model.
 
 ## Custom tools
 You can able to build agents with your own tools.

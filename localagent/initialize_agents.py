@@ -55,7 +55,8 @@ class CreateAgent:
         self.verbose = verbose
 
         self.history = []
-
+        if verbose:
+            important_message(f'Agent initialized with stream={self.stream}')
         if not system_prompt:
             if verbose:
                 important_message('No system prompt given, creating default system prompt.')
@@ -91,10 +92,12 @@ class CreateAgent:
             if verbose:
                 important_message('Code interpreter is enabled, creating code_interpreter tool.')
             self.interpreter = Interpreter(
+                exec={"name": 'ollama' if self.olla_model_name is not None else 'webui', "uri": self.olla_model_name if self.olla_model_name is not None else self.webui_url},
                 max_try=interpreter_max_try,
                 human_=human_,
                 assistant_=assistant_,
-                eos_token=eos_token
+                eos_token=eos_token,
+                stream=self.stream,
             )
             self.tools.append(
                 {
@@ -161,8 +164,8 @@ Message: Hey there! I'm just here. How can I help you today?{self.eos_token}
 {self.human_}: Create a folder called Project-1 and create a file called temp.py in it.{self.eos_token}{self.assistant_}:
 Thought: The user wants to create a folder and a file in it, so I need to ask code_interpreter to create folder and file.
 Action: code_interpreter
-Action Input: {{"task": "Create a folder called Project-1 in the current folder and create a file called temp.py in Project-1 folder."}}
-Observation: Created a folder called Project-1 and created a file called temp.py inside Project-1.
+Action Input: {{"task": "Create a folder called Project-1 in the current folder and create a file called temp.py in Project-1 folder."}}{self.eos_token}
+{self.human_}: This is code interpreter (not user). Created a folder called Project-1 and created a file called temp.py inside Project-1.
 Thought: Now the files are created. I should tell the user about it. No need to use any tools again.
 Message: Created a folder and file in it. I'm here to help you if you need any assistance.{self.eos_token}
 """
@@ -239,6 +242,7 @@ Message: Hey there! I'm just here. How can I help you today?{self.eos_token}"""
                             func_args = action_inp
                             if action == 'code_interpreter':
                                 func_out = f"This is code_interpreter tool (not user). Here is the result for your task:\n{self.interpreter(**func_args)}\nTake this to user."
+                                print('\n')
                             elif action == 'knowledge_retrival':
                                 func_out = f"This is knowledge_retrival tool (not user). Here is the result for your query:\n{self.knowledge_base.create_similarity_search_docs(**func_args)}\nTake this to user."
                             else:

@@ -1,7 +1,7 @@
 import subprocess
 import sys
-from localagent.utils import get_prompt_from_template
-from localagent.gen import run, stream_run
+from localagent.utils import get_prompt_from_template, internal_monologue
+from localagent.gen import run, stream_run, ollama_generate
 from rich.console import Console
 
 console = Console()
@@ -30,8 +30,9 @@ def extract_code(string):
     return code_blocks
 
 class Interpreter:
-    def __init__(self, max_try, human_, assistant_, eos_token, stream=False) -> None:
+    def __init__(self, exec, max_try, human_, assistant_, eos_token, stream=False) -> None:
         self.history = []
+        self.exec = exec
         self.max_try = max_try
         self.human_ = human_
         self.assistant_ = assistant_
@@ -57,14 +58,29 @@ class Interpreter:
         
         return output
     
-    def run(self, task):
+    def __call__(self, task):
+        print('\n')
+        internal_monologue("Interpreter is executing the code...\n")
         self.history.append({'role':'user', 'content':task})
         count = 1
         while True and count <= self.max_try:
             prompt = get_prompt_from_template(CODE_INTERPRETER, self.history, self.human_, self.assistant_, self.eos_token)
-            with console.status("[bold cyan]Executing codes...") as status:
-                response = stream_run(prompt) if self.stream else run(prompt)
-                count += 1
+            if self.exec['name'] == 'webui':
+                if self.stream:
+                    response = stream_run(self.exec['uri'], prompt)
+                else:
+                    with console.status("[bold cyan]Executing codes...") as status:
+                        response = run(self.exec['uri'], prompt)
+            elif self.exec['name'] == 'ollama':
+                if self.stream:
+                    response = ollama_generate(model_name=self.exec['uri'], template=prompt, stream=True)[0]
+                else:
+                    with console.status("[bold cyan]Executing codes...") as status:
+                        response = ollama_generate(model_name=self.exec['uri'], template=prompt)[0]
+            else:
+                raise Exception('Only supported webui and ollama.')
+            count += 1
+            
             self.history.append({'role':'user', 'content':response})
             code_blocks = extract_code(response)
             final_code_output = ''
